@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rippling vs Paylocity / Blue Marble — Global Payroll Comparison</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    /* Rippling brand purples */
+    --rip-purple-deep: #610C60;
+    --rip-purple-dark: #4a0a49;
+    --rip-purple-mid: #7b2d7a;
+    --rip-purple-light: #EAB8F2;
+    --rip-purple-pale: #f5e0f9;
+    --rip-purple-50: #faf4fb;
+    --berry-700: #502E3C;
+    --rip-orange: #FFA81E;
+    --gold-500: #FFCC1C;
+    --gold-300: #BD9155;
+    --teal-500: #5E8D90;
+    --teal-100: #e0f0f1;
+    --teal-700: #3d6f72;
+    --green-500: #22c55e;
+    --green-100: #dcfce7;
+    --green-700: #15803d;
+    --yellow-500: #f59e0b;
+    --yellow-100: #fef3c7;
+    --blue-500: #3b82f6;
+    --blue-100: #dbeafe;
+    --amber-100: #fef3c7;
+    --amber-700: #92400e;
+    --red-500: #ef4444;
+
+    --purple-900: #070406;
+    --purple-800: var(--rip-purple-dark);
+    --purple-700: var(--rip-purple-deep);
+    --purple-600: var(--rip-purple-deep);
+    --purple-500: var(--rip-purple-mid);
+    --purple-400: #a355a1;
+    --purple-300: var(--rip-purple-light);
+    --purple-200: var(--rip-purple-pale);
+    --purple-100: #f5e0f9;
+    --purple-50: var(--rip-purple-50);
+
+    --gray-50: #fafafa;
+    --gray-100: #f4f4f5;
+    --gray-200: #e4e4e7;
+    --gray-300: #d4d4d8;
+    --gray-400: #a1a1aa;
+    --gray-500: #71717a;
+    --gray-600: #52525b;
+    --gray-700: #3f3f46;
+    --gray-800: #27272a;
+    --gray-900: #18181b;
+
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { overflow-y: scroll; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--gray-50);
+    color: var(--gray-800);
+    line-height: 1.5;
+  }
+
+  /* ─── Header ─── */
+  .header {
+    background: linear-gradient(135deg, #4a0a49 0%, #610C60 50%, #7b2d7a 100%);
+    padding: 28px 24px;
+    text-align: center;
+    color: white;
+    position: relative;
+  }
+  .header .logo { margin-bottom: 14px; }
+  .header .logo svg { height: 32px; width: auto; }
+  .header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .header p { font-size: 14px; color: var(--rip-purple-light); }
+
+  .header-export-btn {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    background: rgba(255,255,255,0.12);
+    border: 1.5px solid rgba(255,255,255,0.28);
+    color: rgba(255,255,255,0.85);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    white-space: nowrap;
+    letter-spacing: 0;
+    font-family: inherit;
+    transition: background 0.15s, border-color 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .header-export-btn:hover {
+    background: rgba(255,255,255,0.2);
+    border-color: rgba(255,255,255,0.45);
+    color: white;
+  }
+  .header-export-btn.exporting { pointer-events: none; opacity: 0.6; }
+  body.print-mode .header-export-btn { display: none !important; }
+
+  .container { max-width: 960px; margin: 0 auto; padding: 24px 16px 16px; }
+
+  /* ─── Page Tabs ─── */
+  .page-tabs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--gray-200);
+  }
+  .page-tabs button {
+    border: none;
+    background: transparent;
+    padding: 14px 28px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--gray-400);
+    cursor: pointer;
+    transition: all .15s;
+    position: relative;
+    bottom: -2px;
+    border-bottom: 3px solid transparent;
+    letter-spacing: 0.01em;
+  }
+  .page-tabs button:hover { color: var(--gray-600); }
+  .page-tabs button.active {
+    color: var(--rip-purple-deep);
+    border-bottom-color: var(--rip-purple-deep);
+    background: var(--rip-purple-50);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  }
+
+  .page-tabs .export-btn.exporting { pointer-events: none; opacity: 0.6; }
+
+  /* Print mode hides tabs */
+  body.print-mode .page-tabs { display: none !important; }
+
+  /* Print mode: compact header for PDF export */
+  body.print-mode .header {
+    padding: 14px 24px 16px !important;
+  }
+  body.print-mode .header .logo {
+    margin-bottom: 6px !important;
+  }
+  body.print-mode .header .logo img {
+    height: 24px !important;
+  }
+  body.print-mode .header h1 {
+    font-size: 18px !important;
+    margin-bottom: 2px !important;
+  }
+  body.print-mode .header p {
+    font-size: 12px !important;
+  }
+  body.print-mode .header .prepared-for {
+    font-size: 13px !important;
+    margin-top: 4px !important;
+  }
+
+  /* ─── Cards ─── */
+  .card {
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    padding: 24px 28px;
+    margin-bottom: 16px;
+  }
+
+  /* ─── Section title ─── */
+  .section-title {
+    font-size: 13px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--gray-400); margin-bottom: 10px;
+  }
+
+  /* ─── Key finding callout ─── */
+  .key-finding {
+    background: linear-gradient(135deg, #fff8d4 0%, #fef3c7 100%);
+    border: 1px solid #f5d76e;
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .key-finding-icon {
+    flex-shrink: 0;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--gold-500);
+    color: #6B4A12;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px;
+    margin-top: 1px;
+  }
+  .key-finding-text {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: #5a4515;
+  }
+  .key-finding-text strong {
+    color: #3d2f0a;
+    font-weight: 700;
+  }
+
+  /* ─── Comparison table ─── */
+  .compare-card {
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .compare-card-header {
+    padding: 14px 20px 10px;
+    border-bottom: 1px solid var(--gray-100);
+    background: var(--gray-50);
+  }
+  .compare-card-header h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--gray-800);
+  }
+
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .compare-table thead th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gray-400);
+    border-bottom: 1px solid var(--gray-200);
+    background: white;
+  }
+  .compare-table thead th:nth-child(2) { color: var(--rip-purple-deep); }
+  .compare-table thead th:nth-child(3) { color: var(--berry-700); }
+  .compare-table thead th:first-child { width: 18%; }
+  .compare-table thead th:nth-child(2) { width: 41%; }
+  .compare-table thead th:nth-child(3) { width: 41%; }
+
+  .compare-table tbody td {
+    padding: 11px 16px;
+    font-size: 13px;
+    line-height: 1.5;
+    vertical-align: top;
+    border-bottom: 1px solid var(--gray-100);
+    color: var(--gray-700);
+  }
+  .compare-table tbody tr:last-child td { border-bottom: none; }
+  .compare-table tbody td:first-child {
+    font-weight: 600;
+    color: var(--gray-800);
+    font-size: 13px;
+  }
+  .compare-table tbody tr:nth-child(even) td { background: var(--gray-50); }
+
+  /* ─── Tag pills ─── */
+  .tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-right: 5px;
+    vertical-align: 1px;
+    white-space: nowrap;
+  }
+  .tag.green { background: var(--green-100); color: var(--green-700); }
+  .tag.amber { background: #fde9d4; color: #b45309; }
+  .tag.neutral { background: var(--gray-200); color: var(--gray-600); }
+  .tag.blue { background: var(--teal-100); color: var(--teal-700); }
+  .tag.purple { background: var(--purple-100); color: var(--rip-purple-deep); }
+
+  /* ─── Summary card ─── */
+  .summary-card {
+    background: linear-gradient(135deg, #ffffff 0%, var(--gray-50) 100%);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 24px 28px;
+    box-shadow: var(--shadow);
+  }
+  .summary-eyebrow {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--rip-purple-deep);
+    margin-bottom: 6px;
+  }
+  .summary-title {
+    font-size: 20px; font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 4px;
+    letter-spacing: -0.02em;
+  }
+  .summary-card p {
+    font-size: 13.5px; line-height: 1.65;
+    color: var(--gray-600);
+    margin-top: 12px;
+  }
+  .summary-card p strong {
+    color: var(--gray-800);
+    font-weight: 700;
+  }
+  .summary-divider {
+    height: 1px;
+    background: var(--gray-200);
+    margin: 18px 0 0;
+  }
+  .sources {
+    margin-top: 14px;
+    font-size: 11px; line-height: 1.5;
+    color: var(--gray-400);
+  }
+  .sources strong {
+    color: var(--gray-600);
+    font-weight: 600;
+  }
+
+  /* ─── Highlight stat row ─── */
+  .highlight-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 600px) { .highlight-row { grid-template-columns: 1fr; } }
+  .highlight-card {
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 22px 24px;
+    border-top: 3px solid var(--rip-purple-deep);
+  }
+  .highlight-card.berry { border-top-color: var(--berry-700); }
+  .highlight-card .h-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--gray-400);
+    margin-bottom: 8px;
+  }
+  .highlight-card .h-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+  }
+  .highlight-card .h-purple { color: var(--rip-purple-deep); }
+  .highlight-card .h-berry { color: var(--berry-700); }
+  .highlight-card p {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--gray-600);
+  }
+
+  /* ─── Custom Modal ─── */
+  .modal-overlay {
+    position: absolute; top: 0; left: 0; width: 100%;
+    background: rgba(0,0,0,0.45);
+    z-index: 9999; opacity: 0; transition: opacity .15s;
+  }
+  .modal-overlay.visible { opacity: 1; }
+  .modal-box {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%) translateY(12px);
+    background: white; border-radius: var(--radius); box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    padding: 32px 36px; width: 420px; max-width: 90vw;
+    z-index: 10000;
+    transition: transform .15s, opacity .15s;
+    opacity: 0;
+  }
+  .modal-box.visible { transform: translateX(-50%); opacity: 1; }
+  .modal-title { font-size: 16px; font-weight: 700; color: var(--gray-900); margin-bottom: 6px; }
+  .modal-subtitle { font-size: 13px; color: var(--gray-500); margin-bottom: 20px; }
+  .modal-input {
+    width: 100%; height: 48px; padding: 0 16px; font-size: 15px; font-weight: 500;
+    border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm);
+    background: var(--gray-50); color: var(--gray-800); outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .modal-input:focus {
+    border-color: var(--purple-400);
+    box-shadow: 0 0 0 3px rgba(80,46,60,0.12);
+    background: white;
+  }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  .modal-actions button {
+    padding: 10px 22px; font-size: 13px; font-weight: 600; border-radius: var(--radius-sm);
+    cursor: pointer; border: none; transition: all .15s;
+  }
+  .modal-cancel { background: var(--gray-100); color: var(--gray-600); }
+  .modal-cancel:hover { background: var(--gray-200); }
+  .modal-confirm { background: var(--rip-purple-deep); color: white; }
+  .modal-confirm:hover { background: var(--rip-purple-dark); }
+
+  .footer-note {
+    text-align: center;
+    font-size: 12px;
+    color: var(--gray-400);
+    margin-top: 12px;
+    padding: 0 8px;
+  }
+</style>
+</head>
+<body>
+
+<div style="background:#fef3c7;color:#92400e;text-align:center;padding:10px 16px;font-size:13px;font-weight:600;letter-spacing:0.3px;">
+  This tool is for internal use only. Do not share externally.
+</div>
+
+<div class="header">
+  <button class="header-export-btn" id="header-export-btn" onclick="exportPDF()">📄 Export PDF</button>
+  <div class="logo" style="margin-bottom:14px;">
+    <img src="https://raw.githubusercontent.com/CMarincik/rippling-assets/refs/heads/main/Rippling%20Logo%20white.svg" alt="Rippling" style="height:36px;width:auto;">
+  </div>
+  <h1>Global Payroll Comparison</h1>
+  <p>Rippling Global Payroll vs. Paylocity / Blue Marble</p>
+</div>
+
+<div class="container">
+  <div id="tabs"></div>
+  <div id="app"></div>
+</div>
+
+<script>
+/* ─── State ─── */
+let state = {
+  page: 'architecture'
+};
+
+/* ─── Render: Architecture ─── */
+function renderArchitecture() {
+  return `
+    <div class="key-finding">
+      <div class="key-finding-icon">i</div>
+      <div class="key-finding-text">
+        <strong>Key finding:</strong> Architecture is the most consequential difference between these two options. Rippling delivers global payroll as part of one unified system. Paylocity delivers global payroll through Blue Marble, a separate aggregator platform linked to Paylocity HCM by SSO. This choice governs every report, workflow, automation, and audit downstream of payroll.
+      </div>
+    </div>
+
+    <div class="section-title">Platform Architecture &amp; Data Model</div>
+    <div class="compare-card">
+      <table class="compare-table">
+        <thead>
+          <tr><th>Capability</th><th>Rippling Global Payroll</th><th>Paylocity (Blue Marble)</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Platform model</td>
+            <td><span class="tag green">Unified</span>One platform for HR, payroll, time, benefits, expenses, and IT across U.S. and global.</td>
+            <td><span class="tag amber">Two Systems</span>Paylocity HCM for U.S. and Blue Marble's WebGlobe for international, linked by SSO.</td>
+          </tr>
+          <tr>
+            <td>Employee record</td>
+            <td>One record per employee across every country with one consistent data model.</td>
+            <td>Separate records across two systems with no shared underlying data model.</td>
+          </tr>
+          <tr>
+            <td>Global engine type</td>
+            <td><span class="tag purple">Native + Partner</span>Native in-house engines in seven core countries with single-partner-managed coverage in 160+ others, all delivered through one platform.</td>
+            <td><span class="tag amber">Aggregator</span>Network of in-country partners (ICPs) doing local calculation with Blue Marble's WebGlobe sitting on top as a data layer.</td>
+          </tr>
+          <tr>
+            <td>Country coverage</td>
+            <td>160+ countries supported through one workflow.</td>
+            <td>100+ countries supported through Blue Marble's ICP network.</td>
+          </tr>
+          <tr>
+            <td>Data propagation</td>
+            <td><span class="tag green">Automatic</span>HR changes flow directly into the next pay run with no manual handoff.</td>
+            <td><span class="tag amber">Manual</span>Each pay cycle, inputs are submitted to a Blue Marble project manager who routes to the ICP.</td>
+          </tr>
+          <tr>
+            <td>U.S. and global integration</td>
+            <td>U.S. payroll and global payroll share the same database, the same reporting, and the same GL.</td>
+            <td>U.S. payroll and global payroll live in separate databases, with reconciliation required between them.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* ─── Render: Payroll Operations ─── */
+function renderOperations() {
+  return `
+    <div class="section-title">Pay Cycle Operations</div>
+    <div class="compare-card">
+      <table class="compare-table">
+        <thead>
+          <tr><th>Capability</th><th>Rippling Global Payroll</th><th>Paylocity (Blue Marble)</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>HRIS to payroll sync</td>
+            <td><span class="tag green">Automatic</span>Hires, terminations, raises, and time off flow directly into the next pay run.</td>
+            <td><span class="tag amber">Manual</span>Inputs submitted to Blue Marble PM each cycle. Data does not natively flow from Paylocity HCM.</td>
+          </tr>
+          <tr>
+            <td>Pre-process visibility</td>
+            <td><span class="tag green">Gross-to-Net</span>Calculated preview before approval, including taxes and net pay.</td>
+            <td><span class="tag amber">Gross Only</span>Gross register provided pre-process. Gross-to-net is not available.</td>
+          </tr>
+          <tr>
+            <td>Time and attendance</td>
+            <td><span class="tag green">Native</span>Approved hours flow directly into the next pay run.</td>
+            <td><span class="tag amber">Limited</span>Paylocity Time and Labor does not natively integrate with Blue Marble payroll.</td>
+          </tr>
+          <tr>
+            <td>Off-cycle pay runs</td>
+            <td><span class="tag green">Unlimited</span>Included; processed in the platform.</td>
+            <td><span class="tag amber">PM Coordinated</span>Routed through project manager and ICP; takes days.</td>
+          </tr>
+          <tr>
+            <td>Corrections</td>
+            <td><span class="tag green">Same Day</span>Most corrections processed the same day in the platform.</td>
+            <td><span class="tag amber">Multi Day</span>Corrections require coordination across U.S. and local time zones, taking several days.</td>
+          </tr>
+          <tr>
+            <td>Pay run flexibility</td>
+            <td>Adjust or approve up to days before pay day.</td>
+            <td>Cycle governed by Blue Marble PM and ICP submission deadlines.</td>
+          </tr>
+          <tr>
+            <td>Funding and FX</td>
+            <td>In-platform funding and FX across U.S. and global.</td>
+            <td>In-platform funding through Blue Marble; separate from Paylocity U.S. funding.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* ─── Render: Data & Reporting ─── */
+function renderData() {
+  return `
+    <div class="key-finding">
+      <div class="key-finding-icon">i</div>
+      <div class="key-finding-text">
+        <strong>Why this matters:</strong> When payroll data lives in the same system as everything else, reporting becomes a query rather than a stitching exercise. Workflows span the entire workforce. Finance closes from a single feed. With separate systems linked by SSO, every cross-system question becomes a manual reconciliation.
+      </div>
+    </div>
+
+    <div class="section-title">Reporting, Automation &amp; Finance</div>
+    <div class="compare-card">
+      <table class="compare-table">
+        <thead>
+          <tr><th>Capability</th><th>Rippling Global Payroll</th><th>Paylocity (Blue Marble)</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Consolidated reporting</td>
+            <td><span class="tag green">One Report</span>U.S. and global payroll, time, benefits, and headcount in a single report.</td>
+            <td><span class="tag amber">Per System</span>Country-by-country in Blue Marble. Cross-system reporting requires Excel stitching.</td>
+          </tr>
+          <tr>
+            <td>GL integration</td>
+            <td><span class="tag green">Single Feed</span>One GL feed to NetSuite, QuickBooks, Sage Intacct, and others, covering all countries.</td>
+            <td><span class="tag amber">Two Feeds</span>Paylocity GL for U.S. and Blue Marble GL for international. Reconciliation required each close.</td>
+          </tr>
+          <tr>
+            <td>Workflow automation</td>
+            <td><span class="tag green">Cross Country</span>One workflow spans all employees regardless of country.</td>
+            <td><span class="tag amber">Per System</span>Workflows must be designed and maintained separately for each platform.</td>
+          </tr>
+          <tr>
+            <td>Audit trail</td>
+            <td>Unified across the workforce. One log of who changed what, when.</td>
+            <td>Split between Paylocity HCM and Blue Marble. Audit requires pulling from both.</td>
+          </tr>
+          <tr>
+            <td>Headcount and cost analytics</td>
+            <td>Global view in one query. Slice by department, manager, cost center, or job title across the entire workforce.</td>
+            <td>Manual stitching in Excel for any view that spans U.S. and global headcount.</td>
+          </tr>
+          <tr>
+            <td>Downstream automation</td>
+            <td><span class="tag green">Native</span>Payroll events trigger benefits, IT provisioning, app access, and expense rules in any country.</td>
+            <td><span class="tag amber">Limited</span>Cross-platform automation requires custom integrations or manual handoffs.</td>
+          </tr>
+          <tr>
+            <td>Finance close</td>
+            <td>One reconciliation per period.</td>
+            <td>Two-system reconciliation each close.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* ─── Render: Service & Compliance ─── */
+function renderService() {
+  return `
+    <div class="section-title">Service Model &amp; Statutory Compliance</div>
+    <div class="compare-card">
+      <table class="compare-table">
+        <thead>
+          <tr><th>Capability</th><th>Rippling Global Payroll</th><th>Paylocity (Blue Marble)</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Service approach</td>
+            <td><span class="tag green">Platform Led</span>Self-serve in the platform with on-demand access to local compliance experts.</td>
+            <td><span class="tag amber">Service Led</span>High-touch managed service with U.S. project manager coordinating each cycle with the local ICP.</td>
+          </tr>
+          <tr>
+            <td>Customer responsibility</td>
+            <td>Operates pay run in the platform with full visibility and timing control.</td>
+            <td>Submits inputs to Blue Marble PM, reviews outputs returned from the ICP.</td>
+          </tr>
+          <tr>
+            <td>Statutory filings</td>
+            <td><span class="tag green">Prepared In-Platform</span>Local statutory documents prepared by Rippling and ready to download from the platform for filing by the customer.</td>
+            <td><span class="tag amber">Managed Service</span>Statutory filings managed through Blue Marble's PM and the local in-country partner.</td>
+          </tr>
+          <tr>
+            <td>Compliance updates</td>
+            <td>Pushed through Rippling and applied by the local partner.</td>
+            <td>Communicated by the Blue Marble PM as regulations change in each country.</td>
+          </tr>
+          <tr>
+            <td>Local expertise</td>
+            <td>Local HR and Legal experts available on demand for in-country questions.</td>
+            <td><span class="tag green">Included</span>U.S. PM with direct access to in-country experts in 100+ countries.</td>
+          </tr>
+          <tr>
+            <td>Error resolution</td>
+            <td><span class="tag green">Same Day</span>Resolved in-platform by the customer.</td>
+            <td><span class="tag amber">Multi Day</span>Resolved through PM and ICP coordination across time zones.</td>
+          </tr>
+          <tr>
+            <td>Single point of contact</td>
+            <td>Account team plus in-platform support across all functions.</td>
+            <td><span class="tag green">Dedicated PM</span>One Blue Marble project manager for all international payroll questions.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* ─── Render: Summary ─── */
+function renderSummary() {
+  return `
+    <div class="highlight-row">
+      <div class="highlight-card">
+        <div class="h-label">Rippling Global Payroll</div>
+        <div class="h-title h-purple">Unified Global Payroll Platform</div>
+        <p>One system, one employee record, one report, one GL feed. Native engines in seven countries with partner-managed coverage in 160+ others, all delivered through the same workflow as HR, time, benefits, expenses, and IT. Customers operate payroll in the platform with on-demand access to local compliance experts.</p>
+      </div>
+      <div class="highlight-card berry">
+        <div class="h-label">Paylocity (Blue Marble)</div>
+        <div class="h-title h-berry">Two-Platform Aggregator Model</div>
+        <p>Paylocity HCM for U.S. and Blue Marble's WebGlobe for international, linked by SSO. Each pay cycle is routed through a U.S. project manager and the local in-country partner. Managed service model with the PM and ICP doing the operational work behind a separate platform from Paylocity HCM.</p>
+      </div>
+    </div>
+
+    <div class="section-title">Summary</div>
+    <div class="summary-card">
+      <div class="summary-eyebrow">The Bottom Line</div>
+      <div class="summary-title">Two architectural philosophies</div>
+      <p>Both platforms can produce compliant pay runs in countries where customers operate their own legal entities. The decision is whether payroll is treated as an isolated function or as part of a connected operating system for the workforce.</p>
+      <p><strong>If payroll is the only thing that needs to happen,</strong> either platform produces a compliant pay run through their respective in-country partners. The output is functionally similar.</p>
+      <p><strong>If payroll data needs to inform anything else</strong> (global headcount reporting, finance close, workflow automation, benefits administration, manager self-service, audit trails across the workforce), the architectural difference becomes the operating reality. One unified database supports those use cases natively. Two systems linked by SSO require manual stitching every time those use cases come up.</p>
+      <p>Architecture governs everything that happens with payroll data after the run is complete. Reporting, automation, finance close, and downstream workflows all inherit the choice made at the platform level.</p>
+      <div class="summary-divider"></div>
+      <div class="sources">
+        <strong>Sources:</strong> Rippling Global Payroll product documentation; Blue Marble Global Payroll product documentation and G2 vendor responses; Paylocity Global Payroll product page; industry analyst comparisons. May 2026.
+      </div>
+    </div>
+  `;
+}
+
+/* ─── Main Render ─── */
+function render() {
+  document.getElementById('tabs').innerHTML = `
+    <div class="page-tabs">
+      <button class="${state.page === 'architecture' ? 'active' : ''}" onclick="setPage('architecture')">Architecture</button>
+      <button class="${state.page === 'operations' ? 'active' : ''}" onclick="setPage('operations')">Payroll Operations</button>
+      <button class="${state.page === 'data' ? 'active' : ''}" onclick="setPage('data')">Data &amp; Reporting</button>
+      <button class="${state.page === 'service' ? 'active' : ''}" onclick="setPage('service')">Service &amp; Compliance</button>
+      <button class="${state.page === 'summary' ? 'active' : ''}" onclick="setPage('summary')">Summary</button>
+    </div>
+  `;
+  const renderers = {
+    architecture: renderArchitecture,
+    operations: renderOperations,
+    data: renderData,
+    service: renderService,
+    summary: renderSummary
+  };
+  document.getElementById('app').innerHTML = (renderers[state.page] || renderArchitecture)();
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+function setPage(p) {
+  state.page = p;
+  render();
+}
+
+/* ─── Custom Modal ─── */
+function showModal(title, subtitle, placeholder) {
+  return new Promise((resolve) => {
+    const docHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight, document.body.offsetHeight);
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.style.height = docHeight + 'px';
+
+    const box = document.createElement('div');
+    box.className = 'modal-box';
+    box.style.top = '160px';
+    box.innerHTML = `
+      <div class="modal-title">${title}</div>
+      <div class="modal-subtitle">${subtitle}</div>
+      <input class="modal-input" type="text" placeholder="${placeholder}" autofocus>
+      <div class="modal-actions">
+        <button class="modal-cancel">Cancel</button>
+        <button class="modal-confirm">Continue</button>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+    document.body.appendChild(box);
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => { overlay.classList.add('visible'); box.classList.add('visible'); });
+
+    const input = box.querySelector('.modal-input');
+    const confirm = () => { cleanup(); resolve(input.value); };
+    const cancel = () => { cleanup(); resolve(null); };
+    const cleanup = () => {
+      overlay.classList.remove('visible');
+      box.classList.remove('visible');
+      document.body.style.overflow = '';
+      setTimeout(() => { overlay.remove(); box.remove(); }, 150);
+    };
+
+    box.querySelector('.modal-confirm').onclick = confirm;
+    box.querySelector('.modal-cancel').onclick = cancel;
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') confirm();
+      if (e.key === 'Escape') cancel();
+    });
+    overlay.addEventListener('click', cancel);
+    setTimeout(() => input.focus(), 50);
+  });
+}
+
+/* ─── PDF Export ─── */
+async function exportPDF() {
+  const customerName = await showModal(
+    'Export to PDF',
+    'This name will appear on each page of the exported document. <span style="color:#8a5a6f;font-weight:600;">This is optional.</span>',
+    'Enter Prospect or Customer Name'
+  );
+  if (customerName === null) return;
+
+  const btn = document.getElementById('header-export-btn');
+  const originalText = btn.innerHTML;
+  btn.classList.add('exporting');
+  btn.innerHTML = '⏳ Exporting...';
+
+  const pages = ['architecture', 'operations', 'data', 'service', 'summary'];
+  const pageNames = ['Architecture', 'Payroll Operations', 'Data & Reporting', 'Service & Compliance', 'Summary'];
+
+  const now = new Date();
+  const tzAbbr = now.toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ').pop();
+  const stampOptions = { month: '2-digit', day: '2-digit', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true };
+  const localStamp = new Intl.DateTimeFormat('en-US', stampOptions).format(now).replace(',', ' at') + ' ' + tzAbbr;
+
+  const originalPage = state.page;
+  const headerEl = document.querySelector('.header');
+  const containerEl = document.querySelector('.container');
+  const { jsPDF } = window.jspdf;
+
+  document.body.classList.add('print-mode');
+
+  let preparedEl = null;
+  if (customerName.trim()) {
+    preparedEl = document.createElement('p');
+    preparedEl.className = 'prepared-for';
+    preparedEl.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.9);margin-top:4px;font-weight:600;letter-spacing:0.01em;';
+    preparedEl.textContent = 'Prepared for: ' + customerName.trim();
+    headerEl.appendChild(preparedEl);
+  }
+
+  try {
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 24;
+    const usableWidth = pageWidth - margin * 2;
+
+    for (let i = 0; i < pages.length; i++) {
+      state.page = pages[i];
+      render();
+      await new Promise(r => setTimeout(r, 400));
+
+      const headerCanvas = await html2canvas(headerEl, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: null,
+        logging: false,
+        windowWidth: 960
+      });
+
+      const contentCanvas = await html2canvas(containerEl, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#fafafa',
+        logging: false,
+        windowWidth: 960
+      });
+
+      if (i > 0) pdf.addPage();
+
+      // Header
+      const headerImg = headerCanvas.toDataURL('image/png');
+      const headerWidth = pageWidth;
+      const headerHeight = (headerCanvas.height / headerCanvas.width) * headerWidth;
+      pdf.addImage(headerImg, 'PNG', 0, 0, headerWidth, headerHeight);
+
+      // Page label on header
+      pdf.setFontSize(9);
+      pdf.setTextColor(255, 255, 255);
+      pdf.text(pageNames[i], pageWidth - margin, headerHeight - 10, { align: 'right' });
+
+      // Content
+      const contentImg = contentCanvas.toDataURL('image/jpeg', 0.92);
+      const contentWidth = usableWidth;
+      const contentHeight = (contentCanvas.height / contentCanvas.width) * contentWidth;
+      const contentTop = headerHeight + 4;
+
+      const availHeight = pageHeight - contentTop - 28;
+      let finalHeight = contentHeight;
+      let finalWidth = contentWidth;
+      if (contentHeight > availHeight) {
+        const scale = availHeight / contentHeight;
+        finalHeight = availHeight;
+        finalWidth = contentWidth * scale;
+      }
+
+      const contentX = (pageWidth - finalWidth) / 2;
+      pdf.addImage(contentImg, 'JPEG', contentX, contentTop, finalWidth, finalHeight);
+
+      // Footer
+      pdf.setFontSize(8);
+      pdf.setTextColor(160, 160, 160);
+      pdf.text('Internal use only. Confidential.', margin, pageHeight - 20);
+      pdf.text('Created on ' + localStamp, margin, pageHeight - 10);
+      pdf.text('Page ' + (i + 1) + ' of ' + pages.length, pageWidth - margin, pageHeight - 10, { align: 'right' });
+    }
+
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const safeName = customerName.trim() ? customerName.trim().replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '-') + '-' : '';
+    pdf.save('Rippling-vs-Paylocity-Blue-Marble-Global-Payroll-' + safeName + dateStr + '.pdf');
+
+  } catch (e) {
+    console.error('PDF export failed:', e);
+    alert('PDF export failed. Please try again.');
+  }
+
+  if (preparedEl) preparedEl.remove();
+  document.body.classList.remove('print-mode');
+  state.page = originalPage;
+  render();
+  btn.classList.remove('exporting');
+  btn.innerHTML = originalText;
+}
+
+render();
+</script>
+
+</body>
+</html>
